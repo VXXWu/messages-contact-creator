@@ -43,7 +43,7 @@ STOPWORDS = {
 
 ELONGATED = re.compile(r"(.)\1\1")  # 3+ repeated chars: "Shitttt", "Yesss"
 
-# Words that end a name and start a note/aside, e.g. "Jayden Chen from Robinson".
+# Words that end a name and start a note/aside, e.g. "Jordan Lee from work".
 CONNECTOR_STOPS = {
     "from", "the", "at", "in", "of", "on", "last", "year", "not", "aka", "and",
     "a", "an", "my", "is", "im", "with", "for", "to", "this", "that", "but",
@@ -94,7 +94,7 @@ except Exception:  # jellyfish not installed -> phonetic recall disabled
 
 
 # Phonetic codes of every known first name; lets us recognize odd spellings
-# (Jaiden/Jaeden/Aydin) that aren't literally in the dataset. Built once.
+# (Jaiden/Jaeden/Micheal) that aren't literally in the dataset. Built once.
 FIRST_NAME_CODES = {_phonetic(n) for n in FIRST_NAMES} if HAVE_PHONETIC else set()
 
 _DEINFLECT = [("s", ""), ("es", ""), ("ed", ""), ("d", ""), ("ing", ""),
@@ -167,7 +167,7 @@ def name_score(text):
     then HARD-REJECT anything that looks like a sentence — too long, slang, or
     containing an ordinary English word that isn't itself a known name. What
     survives is scored by dataset membership, with a tightly-gated phonetic layer
-    for odd spellings (Jaiden/Aydin) and recall-first acceptance of a lone
+    for odd spellings (Jaiden/Micheal) and recall-first acceptance of a lone
     capitalized proper noun.
     """
     toks = _name_tokens(text)
@@ -192,7 +192,7 @@ def name_score(text):
     elif titles[0] and not is_wordish(first) and HAVE_PHONETIC and _phonetic(first) in FIRST_NAME_CODES:
         conf += 0.45  # odd spelling that sounds like a known first name
     if all(_known_name(x) for x in low):
-        conf += 0.3  # every token is a real name (covers lowercase "tony gao")
+        conf += 0.3  # every token is a real name (covers lowercase "maria lopez")
     if len(toks) >= 2 and all(titles):
         conf += 0.3  # proper "First Last" capitalization
     if len(toks) >= 2 and any(_known_name(x) for x in low[1:]):

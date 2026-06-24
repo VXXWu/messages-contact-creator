@@ -1,4 +1,4 @@
-# Project Log — messages-contact-importer
+# Project Log — messages-contact-creator
 
 ## 2026-06-24 — Initial build
 - Goal: from an Apple Messages group chat, read a block of messages where people
@@ -8,7 +8,7 @@
   via osascript works (414 existing handles).
 - Key data insight: each message row has both sender handle (phone/email) and text
   → name + contact info paired. Confirmed a real example in the data
-  (`+17083089099` sent "Aydin Alsan").
+  (a phone handle sent a plain "First Last" name).
 - Design decisions (from user):
   - Form: Python CLI, stdlib only.
   - Block selection: interactive pick (list recent messages w/ indices, choose
@@ -56,8 +56,8 @@
 - Verified: --dry-run --show 60 now lists 60 decoded messages (was 8).
 
 ## 2026-06-24 — Fix: duplicate created for a contact you already had (stale WAL read)
-- Symptom: tool created "Jake lee" (+13174296536) even though contact "Jake Lee"
-  with that exact number already existed.
+- Symptom: tool created a contact (e.g. "Chris park", lowercase) even though a
+  contact "Chris Park" with that exact number already existed.
 - Diagnosis: handle dedup is correct; the contacts READ was stale. AddressBook
   DBs were opened with `mode=ro&immutable=1`. `immutable=1` makes SQLite ignore
   the `-wal` file, so recently-saved/edited contacts (still in the WAL, here
@@ -68,12 +68,12 @@
   WAL open fails; returns (con, cleanup). chat.db was already mode=ro (fine).
 - Also removed the name-dedup helpers added earlier: per user, same name +
   different number SHOULD create a new contact; dedup must be by handle only.
-- Verified: WAL-aware read sees 423 handles (was 412 stale); Jake now in existing
-  and excluded from would-create over the whole pic chat.
+- Verified: WAL-aware read sees 423 handles (was 412 stale); the contact is now in
+  existing and excluded from would-create over the whole test chat.
 
 ## 2026-06-24 — Smarter name recognition (datasets + gated phonetic)
-- Goal: recognize names robustly despite noise ("Tristan Zhu 😎", "Jayden Chen
-  (from Robinson…)", "im jacob") and odd spellings (Jaiden/Aydin).
+- Goal: recognize names robustly despite noise ("Alex Kim 😎", "Jordan Lee
+  (from work…)", "im sam") and odd spellings (Jaiden/Micheal).
 - Added build_name_data.py: fetches first names (~20k) + surnames (~85k) from
   smashew/NameDatabases into data/{first_names,last_names}.txt (normalized).
 - New name_score pipeline:
@@ -83,19 +83,19 @@
      (chat/tapback/slang), or any token that is a common English word (incl.
      simple inflections via is_wordish) and NOT a known name → kills sentence
      fragments like "can we play".
-  3. Scoring: dataset membership (primary, handles lowercase "tony gao"); gated
+  3. Scoring: dataset membership (primary, handles lowercase "maria lopez"); gated
      metaphone phonetic (jellyfish, optional) for odd spellings — gated to
      Title-Case non-dictionary tokens because ungated it false-fires on ~52% of
      chat words; recall-first lone-proper-noun acceptance.
   Returns (is_name, conf, clean_name); main() now stores the cleaned name.
-- Findings that drove the design: dataset misses variants (jaiden/aydin/nevaeh)
+- Findings that drove the design: dataset misses variants (jaiden/micheal/kaitlynn)
   but metaphone recovers all of them; ungated phonetic FP rate 52% on chat words,
   ~0 after the Title-Case+not-dictionary gate. Real-data flag rate 17%→8.2%
   (remaining flags are general-conversation msgs outside the target block).
 - Per user: assume the parsed block is almost entirely name messages; multi-name
-  msgs ("Zarni Vince Linden") are edge and not specially handled.
-- Verified end-to-end on the pic chat: "Jayden Chen (from…)"→Jayden Chen,
-  "Tristan Zhu 😎"→Tristan Zhu, "im jacob"→Jacob.
+  msgs ("Alex Jordan Sam") are edge and not specially handled.
+- Verified end-to-end on a test chat: "Jordan Lee (from…)"→Jordan Lee,
+  "Alex Kim 😎"→Alex Kim, "im sam"→Sam.
 
 ## 2026-06-24 — Feature: shared note on all new contacts
 - After review (before creating), prompt for an optional note applied to every new
