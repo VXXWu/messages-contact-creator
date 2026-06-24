@@ -42,14 +42,14 @@ First run `python3 build_name_data.py` once to fetch the name datasets into
 `data/` (first + last names; ~20k / ~85k). The detector then, per message:
 
 1. **Cleans** — strips emoji, trailing parentheticals/notes, and filler prefixes,
-   so `Tristan Zhu 😎`, `Jayden Chen (from Robinson…)`, and `im jacob` reduce to
-   `Tristan Zhu`, `Jayden Chen`, `Jacob`.
+   so `Alex Kim 😎`, `Jordan Lee (from work, not the other one)`, and `im sam`
+   reduce to `Alex Kim`, `Jordan Lee`, and `Sam`.
 2. **Rejects sentences** — drops anything too long, slang (`bro`, `ggs`), elongated
    (`Shitttt`), or containing an ordinary word that isn't itself a known name
    (so `can we play` / `Loved an image` are not names).
-3. **Recognizes** — by dataset membership (handles lowercase, e.g. `tony gao`),
+3. **Recognizes** — by dataset membership (handles lowercase, e.g. `maria lopez`),
    plus a tightly-gated **phonetic** layer (metaphone, via `jellyfish` if present)
-   that catches odd spellings not in the dataset (`Jaiden`, `Aydin`, `Nevaeh`).
+   that catches odd spellings not in the dataset (`Jaiden`, `Micheal`, `Kaitlynn`).
 
 Phonetic is gated to Title-Case, non-dictionary tokens — without that gate ~half
 of normal chat words collide with a name code. If `data/` is missing it falls
