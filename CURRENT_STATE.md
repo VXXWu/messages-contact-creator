@@ -1,4 +1,4 @@
-# CURRENT STATE — messages-contact-importer
+# CURRENT STATE — messages-contact-creator
 
 Updated: 2026-06-24
 
@@ -22,10 +22,10 @@ duplicate-of-existing, weak name recognition).
 
 ## What's NOT in place
 - ❌ No name-based dedup — by design (different number ⇒ new contact).
-- ❌ One name per message assumed; multi-name messages ("Zarni Vince Linden") not
+- ❌ One name per message assumed; multi-name messages ("Alex Jordan Sam") not
   special-cased (per user, an edge that doesn't matter).
-- ❌ Lone lowercase names not in the dataset (e.g. "joowan" alone) can be missed;
-  capitalized or full-name forms are caught. Promote via `add-h` in review.
+- ❌ Lone lowercase names not in the dataset (e.g. an uncommon first name alone)
+  can be missed; capitalized or full-name forms are caught. Promote via `add-h`.
 - ❌ No "merge new handle into existing contact" (only creates new people).
 
 ## Recent decisions (sticky)

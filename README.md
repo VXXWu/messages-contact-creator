@@ -1,4 +1,4 @@
-# messages-contact-importer
+# messages-contact-creator
 
 Reads a block of messages from an Apple Messages **group chat** and auto-creates
 Contacts for senders you don't already have, using the names they typed.
