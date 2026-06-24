@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+
+# Name datasets are fetched by build_name_data.py (third-party, regenerable).
+# Remove this line if you'd rather vendor them for offline use.
+/data/
