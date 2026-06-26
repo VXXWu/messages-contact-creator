@@ -24,7 +24,14 @@ python3 import_contacts.py            # interactive
 python3 import_contacts.py --dry-run  # preview, never writes Contacts
 python3 import_contacts.py --show 60  # show last 60 messages when picking a range
 python3 import_contacts.py --note "Pickup basketball group"  # note on every new contact
+python3 import_contacts.py --delay 3  # seconds between creations (default 1.5; 0 disables)
 ```
+
+> **iCloud sync note:** contacts are created one at a time with a short pause
+> (`--delay`, default 1.5s). Creating many contacts in a tight burst can stall
+> iCloud's CardDAV sync so they never reach your phone; spacing them out avoids
+> that. They're created in whichever account is your Contacts default — make sure
+> that's **iCloud** (not "On My Mac" or Google) if you want them on your phone.
 
 Flow:
 1. Pick a group chat from the list.
