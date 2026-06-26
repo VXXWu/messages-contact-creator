@@ -106,3 +106,14 @@
   create_contact(name, handle, note=""). Dry-run prints the note too.
 - Verified end-to-end: created a contact via create_contact() with a note, read it
   back, deleted it.
+
+## 2026-06-25 — Fix: stuck iCloud sync from bulk creation
+- Symptom: contacts from an early run (9 created in the same second) reached the
+  iCloud server but never landed on the phone; later smaller runs synced fine.
+- Diagnosis: not related to code version (heuristic/note) — the creation path is
+  identical. Root cause was a rapid bulk CardDAV push stalling. Confirmed via the
+  AddressBook sync fields (server filenames/etags present, account = iCloud).
+- Fix in tool: `--delay` (default 1.5s) pauses between each create_contact so each
+  is its own sync push instead of one burst; set 0 to disable.
+- One-off remediation: deleted the 13 stuck 06-24 contacts (excluding the already-
+  synced Jake Lee, by explicit guard) and recreated them spaced ~2s apart.

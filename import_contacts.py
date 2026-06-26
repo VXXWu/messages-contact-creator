@@ -17,6 +17,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 DB_DEFAULT = Path.home() / "Library/Messages/chat.db"
@@ -463,6 +464,9 @@ def main():
     ap.add_argument("--note", default=None,
                     help="note to add to every new contact (skips the prompt; "
                          "pass '' to force no note)")
+    ap.add_argument("--delay", type=float, default=1.5,
+                    help="seconds to pause between contact creations (default 1.5). "
+                         "Spacing them out avoids stuck iCloud bulk-sync; set 0 to disable.")
     args = ap.parse_args()
 
     if not FIRST_NAMES:
@@ -606,13 +610,17 @@ def main():
         return
 
     ok_n = 0
-    for _k, name, hid in to_create:
+    # Space creations apart: rapid bulk creation can stall iCloud (CardDAV) sync so
+    # contacts never reach the phone. One push at a time syncs reliably.
+    for i, (_k, name, hid) in enumerate(to_create):
         try:
             create_contact(name, hid, note)
             print(f"  ✅ {name} → {hid}")
             ok_n += 1
         except RuntimeError as e:
             print(f"  ❌ {name} → {hid}: {e}")
+        if args.delay > 0 and i < len(to_create) - 1:
+            time.sleep(args.delay)
     suffix = f" with note {note!r}" if note else ""
     print(f"\nCreated {ok_n}/{len(to_create)} contact(s){suffix}.")
 
