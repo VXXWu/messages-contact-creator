@@ -23,6 +23,8 @@ python3 build_name_data.py            # fetch name datasets into data/
 python3 import_contacts.py            # interactive
 python3 import_contacts.py --dry-run  # preview, never writes Contacts
 python3 import_contacts.py --show 60  # show last 60 messages when picking a range
+python3 import_contacts.py --chat "college"  # filter chat list by name/participant
+python3 import_contacts.py --chats 100  # list 100 group chats instead of 25
 python3 import_contacts.py --note "Pickup basketball group"  # note on every new contact
 python3 import_contacts.py --delay 3  # seconds between creations (default 1.5; 0 disables)
 ```
