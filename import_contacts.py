@@ -355,7 +355,11 @@ def connect(db_path):
         sys.exit(f"Could not open chat.db ({e}). Grant Terminal Full Disk Access.")
 
 
-def list_group_chats(con, limit=25):
+def list_group_chats(con, limit=25, query=None):
+    """Most-recent group chats. If query is given, filter to chats whose display
+    name OR a participant handle contains it (so you can reach chats far down the
+    recency list without scrolling past the limit)."""
+    q = f"%{query}%" if query else None
     rows = con.execute(
         """
         SELECT c.ROWID, c.display_name, group_concat(h.id, ', ')
@@ -363,15 +367,19 @@ def list_group_chats(con, limit=25):
         JOIN chat_handle_join chj ON chj.chat_id = c.ROWID
         JOIN handle h ON h.ROWID = chj.handle_id
         WHERE c.style = 43
+          AND (?2 IS NULL
+               OR c.display_name LIKE ?2
+               OR EXISTS (SELECT 1 FROM chat_handle_join j JOIN handle hh ON hh.ROWID = j.handle_id
+                          WHERE j.chat_id = c.ROWID AND hh.id LIKE ?2))
         GROUP BY c.ROWID
         ORDER BY (
             SELECT max(m.date) FROM chat_message_join cmj
             JOIN message m ON m.ROWID = cmj.message_id
             WHERE cmj.chat_id = c.ROWID
         ) DESC
-        LIMIT ?
+        LIMIT ?1
         """,
-        (limit,),
+        (limit, q),
     ).fetchall()
     return rows
 
@@ -460,6 +468,11 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--db", default=str(DB_DEFAULT), help="path to chat.db")
     ap.add_argument("--show", type=int, default=40, help="recent messages to show (default 40)")
+    ap.add_argument("--chats", type=int, default=25,
+                    help="how many group chats to list (default 25)")
+    ap.add_argument("--chat", default=None,
+                    help="filter the chat list to names/participants matching this text "
+                         "(reaches chats far down the recency list)")
     ap.add_argument("--dry-run", action="store_true", help="never write Contacts")
     ap.add_argument("--note", default=None,
                     help="note to add to every new contact (skips the prompt; "
@@ -475,10 +488,11 @@ def main():
     con = connect(args.db)
 
     # 1. pick a group chat
-    chats = list_group_chats(con)
+    chats = list_group_chats(con, limit=(500 if args.chat else args.chats), query=args.chat)
     if not chats:
-        sys.exit("No group chats found.")
-    print("\nGroup chats (most recent first):")
+        sys.exit(f"No group chats match {args.chat!r}." if args.chat else "No group chats found.")
+    header = f"Group chats matching {args.chat!r}" if args.chat else "Group chats (most recent first)"
+    print(f"\n{header}:")
     for i, (cid, dname, parts) in enumerate(chats):
         label = dname or (parts[:50] + ("…" if len(parts) > 50 else ""))
         print(f"  [{i}] {label}")
